@@ -26,4 +26,8 @@ public record DadosEndereco(
 		@NotBlank
 		String numero) {
 	
+	public DadosEndereco(Endereco endereco){
+        this(endereco.getLogradouro(), endereco.getBairro(), endereco.getCep(), endereco.getCidade(), endereco.getUf(), endereco.getComplemento(), endereco.getNumero());
+    }
+	
 }
