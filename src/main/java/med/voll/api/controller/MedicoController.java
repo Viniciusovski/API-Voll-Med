@@ -1,46 +1,45 @@
 package med.voll.api.controller;
 
-import java.util.List;
-
+import jakarta.validation.Valid;
+import med.voll.api.medico.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import jakarta.validation.Valid;
-import med.voll.api.medico.DadosCadastroMedico;
-import med.voll.api.medico.DadosListagemMedico;
-import med.voll.api.medico.Medico;
-import med.voll.api.medico.MedicoRepository;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/medicos")
+@RequestMapping("medicos")
 public class MedicoController {
-	
-	@Autowired
-	private MedicoRepository repository;
-	
-	@PostMapping
-	@Transactional // do spring
-	public void cadastrar(@RequestBody @Valid DadosCadastroMedico dados) {
-		repository.save(new Medico(dados));
-	}
-	
-	@GetMapping // Retorna um Page que tem as informações para paginação quando for trabalhado no frontEnd, por isso foi usado o Page e não o List
-	public Page<DadosListagemMedico> listar(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao){
-		return repository.findAll(paginacao).map(DadosListagemMedico::new);
-	}
-	
-//	Agora vamos controlar o número de registros exibidos. Para isso, passaremos, na URL, o parâmetro ?size. Se o igualarmos a 1, teremos a exibição de apenas um registro na tela:
-//
-//		http://localhost:8080/medicos?size=1COPIAR CÓDIGO
-//		Obs: Se não passarmos o parâmetro size, o Spring devolverá 20 registros por padrão.
-//
-//		Para trazermos a página, vamos passar outro parâmetro na URL, após usar um &. Será o parâmetro page. Como a primeira página é representada por page=0, para trazer o próxima, traremos page=1. E assim sucessivamente.
+
+    @Autowired
+    private MedicoRepository repository;
+
+    @PostMapping
+    @Transactional
+    public void cadastrar(@RequestBody @Valid DadosCadastroMedico dados) {
+        repository.save(new Medico(dados));
+    }
+
+    @GetMapping
+    public Page<DadosListagemMedico> listar(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao) {
+        return repository.findAllByAtivoTrue(paginacao).map(DadosListagemMedico::new);
+    }
+
+    @PutMapping
+    @Transactional
+    public void atualizar(@RequestBody @Valid DadosAtualizacaoMedico dados) {
+        var medico = repository.getReferenceById(dados.id());
+        medico.atualizarInformacoes(dados);
+    }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    public void excluir(@PathVariable Long id) {
+        var medico = repository.getReferenceById(id);
+        medico.excluir();
+    }
+
+
 }
