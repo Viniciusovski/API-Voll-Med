@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import javax.management.RuntimeErrorException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -14,6 +15,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component // essa notação é utilizada quando queremos que o spring carregue uma classe generica
 public class SecurityFilter extends OncePerRequestFilter{
+	
+	@Autowired
+	private TokenService tokenService;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -23,6 +27,9 @@ public class SecurityFilter extends OncePerRequestFilter{
 		
 		//Recuperar o token e passalo no cabeçalho da requisição
 		var tokenJWT = recuperarToken(request);
+
+		// Valida o token e recupera o subject
+		var subject = tokenService.getSubject(tokenJWT);
 		
 		// Necessário para chamar os próximos filtros na aplicação
 		filterChain.doFilter(request, response);
@@ -35,7 +42,8 @@ public class SecurityFilter extends OncePerRequestFilter{
 			throw new RuntimeException("Token JWT não enviado no cabeçalho Authorization!");
 		}
 		
-		return authorizationHeader;
+		// Retira o prefixo padrão do Token JWT, o Bearer do token
+		return authorizationHeader.replace("Bearer", "");
 	}
 
 }

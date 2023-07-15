@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 
 import med.voll.api.domain.usuario.Usuario;
 
@@ -34,6 +35,20 @@ public class TokenService {
 		    throw new RuntimeException("Erro ao gerar token jwt", exception);
 		}
 	}
+	
+	// Validar o token e recuperar o subject
+	public String getSubject(String tokenJWT) {
+        try {
+                var algoritmo = Algorithm.HMAC256(secret);
+                return JWT.require(algoritmo)
+                                .withIssuer("API Voll.med")
+                                .build()
+                                .verify(tokenJWT)
+                                .getSubject();
+        } catch (JWTVerificationException exception) {
+                throw new RuntimeException("Token JWT inválido ou expirado!");
+        }
+}
 
 	private Instant dataExpiracao() {
 		// Instant faz parte da API de datas do Java 8
